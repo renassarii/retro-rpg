@@ -16,7 +16,7 @@ class Game(arcade.Window):
         arcade.set_background_color(arcade.color.BLACK)
 
         # ===== PLAYER =====
-        self.player = arcade.Sprite("character/gandalf.png", 2)
+        self.player = arcade.Sprite("assets/images/characters/gandalf.png", 2)
         self.player.center_x = 100
         self.player.center_y = 50
 
@@ -26,7 +26,7 @@ class Game(arcade.Window):
         # ===== ENEMY =====
         self.enemies = arcade.SpriteList()
         for _ in range(1):
-            enemy = arcade.Sprite("character/Franz.png", 2)
+            enemy = arcade.Sprite("assets/images/characters/Franz.png", 2)
             enemy.center_x = 300
             enemy.center_y = 100
             self.enemies.append(enemy)
