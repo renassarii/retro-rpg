@@ -1,27 +1,27 @@
 import arcade
 import random
 
-WIDTH = 800
-HEIGHT = 600
-PLAYER_SPEED = 200
+WIDTH = 400
+HEIGHT = 200
+PLAYER_SPEED = 100
 
 class Game(arcade.Window):
     def __init__(self):
         super().__init__(WIDTH, HEIGHT, "Smooth Movement with Keys")
         arcade.set_background_color(arcade.color.BLACK)
 
-        self.player = arcade.Sprite(":resources:images/animated_characters/male_person/malePerson_idle.png", 1)
-        self.player.center_x = WIDTH // 2
-        self.player.center_y = HEIGHT // 2
+        self.player = arcade.Sprite("character/gandalf.png", 1)
+        self.player.center_x = 100
+        self.player.center_y = 50
 
         self.player_list = arcade.SpriteList()
         self.player_list.append(self.player)
 
         self.enemies = arcade.SpriteList()
-        for _ in range(5):
-            enemy = arcade.Sprite(":resources:images/enemies/slimeBlue.png", 1)
-            enemy.center_x = random.randint(0, WIDTH)
-            enemy.center_y = random.randint(0, HEIGHT)
+        for _ in range(1):
+            enemy = arcade.Sprite("character/Franz.png", 1)
+            enemy.center_x = 300
+            enemy.center_y = 100
             self.enemies.append(enemy)
 
         # Tasten-Tracking
@@ -32,7 +32,7 @@ class Game(arcade.Window):
         self.player_list.draw()
         self.enemies.draw()
 
-    def on_update(self, delta_time):
+    '''def on_update(self, delta_time):
         # Geschwindigkeit zurücksetzen
         self.player.change_x = 0
         self.player.change_y = 0
@@ -61,7 +61,7 @@ class Game(arcade.Window):
 
     def on_key_release(self, key, modifiers):
         if key in self.keys_held:
-            self.keys_held.remove(key)
+            self.keys_held.remove(key)'''
 
 if __name__ == "__main__":
     game = Game()
