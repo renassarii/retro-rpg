@@ -108,6 +108,8 @@ class Game(arcade.Window):
         self.player_list.append(self.player)
         self.enemy_list.append(self.enemy)
 
+        self.message_timer = 0
+
         # =========================
         # HP
         # =========================
@@ -342,6 +344,11 @@ class Game(arcade.Window):
         if self.state != "explore":
             return
 
+        if self.message_timer > 0:
+            self.message_timer -= delta_time
+            if self.message_timer <= 0:
+                self.message = ""
+
         if arcade.key.W in self.keys_held:
             self.player.center_y += PLAYER_SPEED
         if arcade.key.S in self.keys_held:
@@ -351,8 +358,13 @@ class Game(arcade.Window):
         if arcade.key.D in self.keys_held:
             self.player.center_x += PLAYER_SPEED
 
+
     def on_key_press(self, key, modifiers):
         self.keys_held.add(key)
+
+        if key == arcade.key.Q:
+            self.message = "Interact with E"
+            self.message_timer = 10.0
 
         # enter dialogue
         if self.state == "explore" and key == arcade.key.E:
