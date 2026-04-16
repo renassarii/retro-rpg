@@ -1,5 +1,8 @@
 import arcade
 import random
+import requests
+from io import BytesIO
+from PIL import Image
 
 WIDTH = 800
 HEIGHT = 450
@@ -18,6 +21,10 @@ dialogues = {
     ]
 }
 
+def load_texture_from_url(url):
+    response = requests.get(url)
+    img = Image.open(BytesIO(response.content))
+    return arcade.Texture(name =url,image= img)
 
 class Game(arcade.Window):
     def __init__(self):
@@ -33,10 +40,16 @@ class Game(arcade.Window):
         self.dialog_index = 0
 
         # =========================
+        # LOADING PICS
+        # =========================
+        player_texture = load_texture_from_url(url + "assets/images/characters/gandalf.png")
+        enemy_texture = load_texture_from_url(url + "assets/images/characters/Franz.png")
+
+        # =========================
         # SPRITES
         # =========================
-        self.player = arcade.Sprite(url + "assets/images/character/gandalf.png", 2)
-        self.enemy = arcade.Sprite(url +"assets/images/character/Franz.png", 2)
+        self.player = arcade.Sprite(player_texture, 2)
+        self.enemy = arcade.Sprite(enemy_texture, 2)
 
         self.player_list = arcade.SpriteList()
         self.enemy_list = arcade.SpriteList()
