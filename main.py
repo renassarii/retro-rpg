@@ -15,9 +15,9 @@ url = "https://raw.githubusercontent.com/renassarii/RetroRPG/main/"
 # =========================
 dialogues = {
     1: [
-        "Franz: Hey du!",
-        "Was willst du hier?",
-        "Dann kämpfen wir!"
+        "wuff du hund",
+        "geh auf die knie und bell wenns da nit gfallt",
+        "wuff"
     ]
 }
 
