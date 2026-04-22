@@ -56,6 +56,7 @@ dialogues = {
             "You have Punch that's the most basic attack you just go up to him and smack him",
             "You can use Magic you just channel your Mana(Bp) and just release a spell you only have one right now",
             "You can get Items on this Island i will give you 5 Heal and Mana potions",
+            "You can Shield yourself mid round it won't give the turn to your enemy and you get less damage",
             "At last the pussy move is running away with Escape.",
             "Now fight me"
         ]
@@ -110,7 +111,7 @@ def load_texture_from_url(url):
 
 class Game(arcade.Window):
     def __init__(self):
-        super().__init__(WIDTH, HEIGHT, "RPG SYSTEM", fullscreen=True)
+        super().__init__(WIDTH, HEIGHT, "Köpek RPG", fullscreen=True)
         self.set_fullscreen(True)
 
 
@@ -174,6 +175,7 @@ class Game(arcade.Window):
         # HP
         # =========================
         self.player_hp = 100
+        self.player_defense = False
         self.enemy_hp = 100
         self.enemy_max_hp = 100
         self.enemy_luck = 0
@@ -195,7 +197,7 @@ class Game(arcade.Window):
         # =========================
         # MENU
         # =========================
-        self.menu = ["Punch", "Magic", "Item", "Escape"]
+        self.menu = ["Punch", "Magic", "Item","Shield", "Escape"]
         self.selected = 0
         self.menu_2 = ["small Mana potion", "small Health potion", "Chug Chug"]
         self.selected_2 = 0
@@ -237,8 +239,9 @@ class Game(arcade.Window):
         if action == "Punch":
             damage = 14
             if self.enemy_defense:
-                self.enemy_hp -= int(damage * 0.5)
-                self.message = "he shielded himself -7 damage"
+                shield_damage = int(damage * random.random())
+                self.enemy_hp -= shield_damage
+                self.message = f"he shielded himself {shield_damage} damage"
                 action_done = True
                 self.enemy_defense = False
             else:
@@ -254,8 +257,9 @@ class Game(arcade.Window):
                     damage = 10
                     self.bp -= 3
                     if self.enemy_defense:
-                        self.enemy_hp -= int(damage * 0.5)
-                        self.message = "he shielded himself -5 damage"
+                        shield_damage = int(damage * random.random())
+                        self.enemy_hp -= shield_damage
+                        self.message = f"he shielded himself {shield_damage} damage"
                         action_done  = True
                         self.enemy_defense = False
                     else:
@@ -271,8 +275,9 @@ class Game(arcade.Window):
                     damage = 20
                     self.bp -= 6
                     if self.enemy_defense:
-                        self.enemy_hp -= int(damage * 0.5)
-                        self.message = "he shielded himself -10 damage"
+                        shield_damage = int(damage * random.random())
+                        self.enemy_hp -= shield_damage
+                        self.message = f"he shielded himself {shield_damage} damage"
                         action_done = True
                         self.enemy_defense = False
                     else:
@@ -281,10 +286,6 @@ class Game(arcade.Window):
                         action_done = True
                 else:
                     self.message = "you don't have enough BP"
-
-
-
-
 
         elif action == "Item":
             item = self.menu_2[self.selected_2]
@@ -312,6 +313,14 @@ class Game(arcade.Window):
 
             else:
                 self.message = "No potions left"
+
+        elif action == "Shield":
+            if self.player_defense:
+                self.message = "You are shielded already"
+            else:
+                self.player_defense = True
+                self.message = "You shield yourself for the next turn"
+                action_done = True
 
         elif action == "Escape":
             if random.random() > 0.5:
@@ -456,7 +465,7 @@ class Game(arcade.Window):
             arcade.draw_text("Köpek Franz", 570, 430, arcade.color.WHITE, 14)
 
             arcade.draw_rect_filled(
-                arcade.rect.XYWH(400, 80, 760, 140),
+                arcade.rect.XYWH(400, 80, 4000, 140),
                 arcade.color.BLACK
             )
             x = 200
@@ -688,20 +697,41 @@ class Game(arcade.Window):
             self.enemy_timer -= delta_time
 
             if self.enemy_timer <= 0:
-                self.enemy_luck = random.random()
-                if self.enemy_luck <= 0.2:
-                    self.player_hp -= 20
-                    self.message = "Crit damage -20HP"
-                elif 0.2 <= self.enemy_luck <= 0.6:
-                    self.player_hp -= 10
-                    self.message = "-10 damage"
-                elif 0.6 <= self.enemy_luck <= 0.8:
-                    self.enemy_defense = True
-                elif self.enemy_luck >= 0.8:
-                    self.enemy_hp += 20
-                    self.message = "Damn this bitch healed himself"
-                self.enemy_turn = False
-                self.player_turn = True
+                if self.player_defense:
+                    self.enemy_luck = random.random()
+                    if self.enemy_luck <= 0.2:
+                        damage = int(20 * random.random())
+                        self.player_hp -= damage
+                        self.message = f"Crit damage but your Shield was up {damage}"
+                        self.player_defense = False
+                    elif 0.2 <= self.enemy_luck <= 0.6:
+                        damage = int(10 * random.random())
+                        self.player_hp -= int(10 * random.random())
+                        self.message = f"your Shield was up {damage}"
+                        self.player_defense = False
+                    elif 0.6 <= self.enemy_luck <= 0.8:
+                        self.enemy_defense = True
+                    elif self.enemy_luck >= 0.8:
+                        self.enemy_hp += 20
+                        self.message = "Damn this bitch healed himself"
+                    self.enemy_turn = False
+                    self.player_turn = True
+                else:
+                    self.enemy_luck = random.random()
+                    if self.enemy_luck <= 0.2:
+                        self.player_hp -= 20
+                        self.message = "Crit damage -20HP"
+                    elif 0.2 <= self.enemy_luck <= 0.6:
+                        self.player_hp -= 10
+                        self.message = "-10 damage"
+                    elif 0.6 <= self.enemy_luck <= 0.8:
+                        self.enemy_defense = True
+                    elif self.enemy_luck >= 0.8:
+                        heal = int(random.random() * 20)
+                        self.enemy_hp += heal
+                        self.message = f"Damn this bitch healed himself for {heal} hp"
+                    self.enemy_turn = False
+                    self.player_turn = True
 
         if self.state == "explore":
             if self.message_timer > 0:
