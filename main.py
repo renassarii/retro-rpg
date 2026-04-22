@@ -79,6 +79,26 @@ dialogues = {
             "ähhh"
         ]
     },
+    10:{
+        "name": "System",
+        "lines":[
+            "Well done you did it a level up",
+            "choose do you want to level up your hp or bp"
+        ]
+    },
+    11:{
+        "name": "System",
+        "lines":[
+            "go on with your advanture"
+        ]
+    },
+    12:{
+        "name": "System",
+        "lines":[
+            "brr"
+        ]
+    },
+
 }
 
 
@@ -109,7 +129,9 @@ class Game(arcade.Window):
 
         self.background1 = load_texture_from_url(url + "assets/images/backgrounds/hintergrund.png")
         self.gameover = load_texture_from_url(url + "assets/images/backgrounds/gameover.png")
-        self.level_up = load_texture_from_url(url + "assets/images/backgrounds/hintergrund.png")
+        self.level_ui_bg = load_texture_from_url(url + "assets/images/backgrounds/hintergrund.png")
+
+
 
 
 
@@ -126,6 +148,11 @@ class Game(arcade.Window):
             "Fire Spell": url + "assets/images/characters/Franz.png",
             "Ice Spell": url + "assets/images/characters/gandalf.png",
                             }
+        self.level_icons = {
+            "Hp": load_texture_from_url(url + "assets/images/items/SmallHealPotion.png"),
+            "Bp": load_texture_from_url(url + "assets/images/items/SmallManaPotion.png"),
+        }
+
 
 
 
@@ -150,6 +177,7 @@ class Game(arcade.Window):
         self.max_hp = 100
         self.player_xp = 0
         self.player_max_xp = 100
+        self.level = 1
 
         self.bp = 20
         self.max_bp = 20
@@ -177,6 +205,8 @@ class Game(arcade.Window):
             "Fire Spell":3,
             "Ice Spell":6,
         }
+        self.menu_4 = ["Hp", "Bp"]
+        self.selected_4 = 0
         self.message = ""
 
 
@@ -251,10 +281,22 @@ class Game(arcade.Window):
             self.player_hp -=10
 
         if self.enemy_hp <= 0:
-            self.state = "dialog"
-            self.current_dialog_id = 9
-            self.dialog_index = 0
             self.after_battle = True
+            self.player_xp += 100
+
+            if self.player_xp >= self.player_max_xp:
+                self.player_xp -= self.player_max_xp
+                self.level += 1
+                self.player_max_xp += 50
+
+                self.state = "level_choice"
+                self.selected_4 = 0
+                return
+            else:
+                self.state = "dialog"
+                self.current_dialog_id = 9
+                self.dialog_index = 0
+
 
         if self.player_hp <= 0:
             self.state = "gameover"
@@ -287,6 +329,7 @@ class Game(arcade.Window):
                              arcade.color.WHITE, 20,
                              anchor_x="center")
             return
+
 
         arcade.draw_texture_rect(
             self.background1,
@@ -323,14 +366,9 @@ class Game(arcade.Window):
                         10,
                         anchor_x="center"
                     )
-
             return
 
-        if self.state == "level_up":
-            arcade.draw_texture_rect(
-                self.level_up,
-                arcade.rect.XYWH(self.width // 2, self.height // 2, self.width, self.height)
-                
+
         if self.state == "dialog":
             self.player_list.draw()
             self.enemy_list.draw()
@@ -339,6 +377,7 @@ class Game(arcade.Window):
                 arcade.rect.XYWH(400, 80, 3000, 140),
                 arcade.color.BLACK
             )
+
 
 
             # ✅ FIXED DIALOG ACCESS
@@ -359,95 +398,156 @@ class Game(arcade.Window):
             )
             return
 
-        # =========================
+
+            # =========================
         # BATTLE MODE
         # =========================
-        self.player_list.draw()
-        self.enemy_list.draw()
+        if self.state == "battle":
+            self.player_list.draw()
+            self.enemy_list.draw()
 
-        self.draw_hp_bar(200, 410, self.player_hp, arcade.color.GREEN)
-        self.draw_hp_bar(600, 410, self.enemy_hp, arcade.color.RED)
-        self.draw_bp_bar(200, 395, self.bp, arcade.color.CYAN)
+            self.draw_hp_bar(200, 410, self.player_hp, arcade.color.GREEN)
+            self.draw_hp_bar(600, 410, self.enemy_hp, arcade.color.RED)
+            self.draw_bp_bar(200, 395, self.bp, arcade.color.CYAN)
 
-        arcade.draw_text("Gypsy Luka", 170, 430, arcade.color.WHITE, 14)
-        arcade.draw_text("Köpek Franz", 570, 430, arcade.color.WHITE, 14)
-
-        arcade.draw_rect_filled(
-            arcade.rect.XYWH(400, 80, 760, 140),
-            arcade.color.BLACK
-        )
-        x = 200
-        for i, magic in enumerate(self.menu):
-            color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
-            arcade.draw_text(magic, x + i * 150, 70, color, 18)
-
-        arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
-
-
-        if self.menu[self.selected] == "Magic":
-
-            popup_x = 250
-            popup_y = 200
+            arcade.draw_text("Gypsy Luka", 170, 430, arcade.color.WHITE, 14)
+            arcade.draw_text("Köpek Franz", 570, 430, arcade.color.WHITE, 14)
 
             arcade.draw_rect_filled(
-                arcade.rect.XYWH(popup_x, popup_y, 300, 160),
+                arcade.rect.XYWH(400, 80, 760, 140),
                 arcade.color.BLACK
             )
+            x = 200
+            for i, magic in enumerate(self.menu):
+                color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
+                arcade.draw_text(magic, x + i * 150, 70, color, 18)
 
-            for i, magic in enumerate(self.menu_3):
-                y = popup_y + 40 - i * 60
+            arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
 
-                texture = self.magic_textures[magic]
+            if self.menu[self.selected] == "Magic":
 
-                arcade.draw_texture_rect(texture,arcade.rect.XYWH(popup_x - 80, y, 40, 40)                                         )
+                popup_x = 250
+                popup_y = 200
 
-                color = arcade.color.YELLOW if i == self.selected_3 else arcade.color.WHITE
+                arcade.draw_rect_filled(
+                    arcade.rect.XYWH(popup_x, popup_y, 300, 160),
+                    arcade.color.BLACK
+                )
 
-                arcade.draw_text(f"{magic} -{self.usage[magic]} BP",popup_x - 20,y - 10,color,14)
+                for i, magic in enumerate(self.menu_3):
+                    y = popup_y + 40 - i * 60
 
-                # 👉 SELECTION INDICATOR
-                if i == self.selected_3:
-                    arcade.draw_text("▶",popup_x - 50,y - 15,arcade.color.RED,18)
+                    texture = self.magic_textures[magic]
 
+                    arcade.draw_texture_rect(texture, arcade.rect.XYWH(popup_x - 80, y, 40, 40))
 
+                    color = arcade.color.YELLOW if i == self.selected_3 else arcade.color.WHITE
 
+                    arcade.draw_text(f"{magic} -{self.usage[magic]} BP", popup_x - 20, y - 10, color, 14)
 
-        for i, item in enumerate(self.menu):
-            color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
-            arcade.draw_text(item, x + i * 150, 70, color, 18)
+                    # 👉 SELECTION INDICATOR
+                    if i == self.selected_3:
+                        arcade.draw_text("▶", popup_x - 50, y - 15, arcade.color.RED, 18)
+            arcade.draw_text(f"Level: {self.level}", 20, 430, arcade.color.WHITE, 14)
 
-        arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
+            for i, item in enumerate(self.menu):
+                color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
+                arcade.draw_text(item, x + i * 150, 70, color, 18)
 
-        if self.menu[self.selected] == "Item":
+            arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
 
-            popup_x = 450
-            popup_y = 200
+            if self.menu[self.selected] == "Item":
 
-            arcade.draw_rect_filled(
-                arcade.rect.XYWH(popup_x, popup_y, 300, 160),
-                arcade.color.BLACK
+                popup_x = 450
+                popup_y = 200
+
+                arcade.draw_rect_filled(
+                    arcade.rect.XYWH(popup_x, popup_y, 300, 160),
+                    arcade.color.BLACK
+                )
+
+                for i, item in enumerate(self.menu_2):
+                    y = popup_y + 40 - i * 60
+
+                    texture = self.item_textures[item]
+
+                    arcade.draw_texture_rect(texture, arcade.rect.XYWH(popup_x - 80, y, 40, 40))
+
+                    if self.inventory[self.menu_2[self.selected_2]] == 0:
+                        # Aktion blocken
+                        return
+                    else:
+                        color = arcade.color.YELLOW if i == self.selected_2 else arcade.color.WHITE
+                    count = self.inventory[item]
+                    arcade.draw_text(f"{count}x {item} ", popup_x - 20, y - 10, color, 14)
+
+                    if i == self.selected_2:
+                        arcade.draw_text("▶", popup_x - 50, y - 15, arcade.color.RED, 18)
+            return
+
+        if self.state == "level_choice":
+            arcade.draw_texture_rect(
+                self.level_ui_bg,
+                arcade.rect.XYWH(self.width // 2, self.height // 2, self.width, self.height)
             )
 
-            for i, item in enumerate(self.menu_2):
-                y = popup_y + 40 - i * 60
+            arcade.draw_text(
+                "LEVEL UP! Wähle dein Upgrade",
+                self.width / 2,
+                380,
+                arcade.color.WHITE,
+                24,
+                anchor_x="center"
+            )
+            options = self.menu_4
 
-                texture = self.item_textures[item]
+            for i, option in enumerate(options):
+                x = 700 + i * 300
+                y = 200
 
-                arcade.draw_texture_rect(texture,arcade.rect.XYWH(popup_x - 80, y, 40, 40))
+                # Box
+                arcade.draw_rect_filled(
+                    arcade.rect.XYWH(x, y, 200, 180),
+                    arcade.color.BLACK
+                )
 
-                if self.inventory[self.menu_2[self.selected_2]] == 0:
-                    # Aktion blocken
-                    return
-                else:
-                    color = arcade.color.YELLOW if i == self.selected_2 else arcade.color.WHITE
-                count = self.inventory[item]
-                arcade.draw_text(f"{count}x {item} ", popup_x - 20, y - 10, color, 14)
+                # Icon
+                arcade.draw_texture_rect(
+                    self.level_icons[option],
+                    arcade.rect.XYWH(x, y + 40, 80, 80)
+                )
 
-                if i == self.selected_2:
-                    arcade.draw_text("▶",popup_x - 50,y - 15,arcade.color.RED,18)
+                # Text
+                arcade.draw_text(
+                    option,
+                    x,
+                    y - 50,
+                    arcade.color.WHITE,
+                    18,
+                    anchor_x="center"
+                )
+
+                # Auswahlmarker
+                if self.selected_4 == i:
+                    arcade.draw_text(
+                        "▶",
+                        x - 80,
+                        y - 10,
+                        arcade.color.RED,
+                        30
+                    )
+                arcade.draw_text(
+                    "Drücke SPACE um Upgrade zu wählen",
+                    self.width / 2,
+                    330,
+                    arcade.color.LIGHT_GRAY,
+                    14,
+                    anchor_x="center"
+                )
+            return
 
 
-    # =========================
+            # =========================
     # HP BAR
     # =========================
     def draw_hp_bar(self, x, y, hp, color):
@@ -581,6 +681,32 @@ class Game(arcade.Window):
 
     def on_key_press(self, key, modifiers):
         self.keys_held.add(key)
+        if self.state == "level_up" and key == arcade.key.SPACE:
+            self.state = "level_choice"
+            return
+        elif self.state == "level_choice":
+
+            if key == arcade.key.LEFT:
+                self.selected_4 = (self.selected_4 - 1) % len(self.menu_4)
+
+            if key == arcade.key.RIGHT:
+                self.selected_4 = (self.selected_4 + 1) % len(self.menu_4)
+
+            if key == arcade.key.SPACE:
+
+                choice = self.menu_4[self.selected_4]
+
+                if choice == "Hp":
+                    self.max_hp += 20
+                    self.player_hp += 20
+
+                elif choice == "Bp":
+                    self.max_bp += 20
+                    self.bp += 20
+
+                self.state = "dialog"
+                self.current_dialog_id = 11
+                self.dialog_index = 0
 
         # enter dialogue
         if self.state == "explore" and key == arcade.key.E:
@@ -594,7 +720,7 @@ class Game(arcade.Window):
 
 
         # dialog progression
-        elif self.state == "dialog" and key == arcade.key.SPACE:
+        if self.state == "dialog" and key == arcade.key.SPACE:
             self.dialog_index += 1
 
             if self.dialog_index >= len(dialogues[self.current_dialog_id]["lines"]):
@@ -602,8 +728,14 @@ class Game(arcade.Window):
 
 
                 if self.after_battle:
-                    if self.player_xp == self.player_max_xp:
-                        self.state = "level_up"
+                    if self.player_xp >= self.player_max_xp:
+                        self.player_xp = 0
+                        self.player_max_xp += 50
+
+                        self.current_dialog_id = 10
+                        self.dialog_index = 0
+                        self.state = "dialog"
+                        self.after_battle = False
                         return
                     else:
                         self.enemy.kill()
@@ -629,7 +761,7 @@ class Game(arcade.Window):
                 else:
                     self.state = "battle"
                     self.start_battle_positions()
-        elif self.state == "battle":
+        if self.state == "battle":
 
             if key == arcade.key.LEFT:
                 self.selected = (self.selected - 1) % len(self.menu)
