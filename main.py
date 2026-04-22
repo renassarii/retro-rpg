@@ -175,6 +175,9 @@ class Game(arcade.Window):
         # =========================
         self.player_hp = 100
         self.enemy_hp = 100
+        self.enemy_max_hp = 100
+        self.enemy_luck = 0
+        self.enemy_defense = False
         self.max_hp = 100
         self.player_xp = 0
         self.player_max_xp = 100
@@ -199,7 +202,7 @@ class Game(arcade.Window):
         self.inventory = {
             "small Mana potion": 5,
             "small Health potion": 5,
-            "Chug Chug": 0,
+            "Chug Chug": 1,
         }
         self.menu_3 = ["Fire Spell", "Ice Spell"]
         self.selected_3 = 0
@@ -210,6 +213,10 @@ class Game(arcade.Window):
         self.menu_4 = ["Hp", "Bp"]
         self.selected_4 = 0
         self.message = ""
+
+        self.enemy_turn = False
+        self.enemy_timer = 0
+        self.player_turn = True
 
 
         # =========================
@@ -225,28 +232,53 @@ class Game(arcade.Window):
 
     def do_action(self):
         action = self.menu[self.selected]
+        action_done = False
 
         if action == "Punch":
-            self.enemy_hp -= 15
-            self.message = "⚔ 15"
+            damage = 14
+            if self.enemy_defense:
+                self.enemy_hp -= int(damage * 0.5)
+                self.message = "he shielded himself -7 damage"
+                action_done = True
+                self.enemy_defense = False
+            else:
+                self.enemy_hp -= damage
+                self.message = "you did -14 damage"
+                action_done = True
 
         elif action == "Magic":
             magic = self.menu_3[self.selected_3]
 
             if magic == "Fire Spell":
                 if self.bp >= 3:
-                    self.enemy_hp -= 10
-                    self.bp -=3
-                    self.message = "-10 damage"
+                    damage = 10
+                    self.bp -= 3
+                    if self.enemy_defense:
+                        self.enemy_hp -= int(damage * 0.5)
+                        self.message = "he shielded himself -5 damage"
+                        action_done  = True
+                        self.enemy_defense = False
+                    else:
+                        self.enemy_hp -= damage
+                        self.message = "-10 damage"
+                        action_done = True
                 else:
                     self.message = "you don't have enough BP"
 
 
             elif magic == "Ice Spell":
                 if self.bp >= 6:
-                    self.enemy_hp -= 20
-                    self.bp -=6
-                    self.message = "-20 damage"
+                    damage = 20
+                    self.bp -= 6
+                    if self.enemy_defense:
+                        self.enemy_hp -= int(damage * 0.5)
+                        self.message = "he shielded himself -10 damage"
+                        action_done = True
+                        self.enemy_defense = False
+                    else:
+                        self.enemy_hp -= damage
+                        self.message = "-20 damage"
+                        action_done = True
                 else:
                     self.message = "you don't have enough BP"
 
@@ -263,14 +295,17 @@ class Game(arcade.Window):
                 if item == "small Health potion":
                     self.player_hp = min(self.max_hp, self.player_hp + 20)
                     self.message = "+20 HP"
+                    action_done = True
 
                 elif item == "small Mana potion":
                     self.bp = min(self.max_bp, self.bp + 20)
                     self.message = "+20 BP"
+                    action_done = True
                 elif item == "Chug Chug":
                     self.player_hp = self.max_hp
                     self.bp = self.max_bp
                     self.message = "everything fully restored"
+                    action_done = True
 
                 #  reduzieren
                 self.inventory[item] -= 1
@@ -282,9 +317,8 @@ class Game(arcade.Window):
             if random.random() > 0.5:
                 self.state = "explore"
                 self.message = "Ran away!"
+                action_done = True
 
-        if self.enemy_hp > 0:
-            self.player_hp -=10
 
         if self.enemy_hp <= 0:
             self.after_battle = True
@@ -302,10 +336,12 @@ class Game(arcade.Window):
                 self.state = "dialog"
                 self.current_dialog_id = 9
                 self.dialog_index = 0
+                return
 
 
         if self.player_hp <= 0:
             self.state = "gameover"
+
 
 
     def set_spawn_points(self):
@@ -412,8 +448,8 @@ class Game(arcade.Window):
             self.player_list.draw()
             self.enemy_list.draw()
 
-            self.draw_hp_bar(200, 410, self.player_hp, arcade.color.GREEN)
-            self.draw_hp_bar(600, 410, self.enemy_hp, arcade.color.RED)
+            self.draw_hp_bar(200, 410, self.player_hp,self.max_hp, arcade.color.GREEN)
+            self.draw_hp_bar(600, 410, self.enemy_hp,self.enemy_max_hp, arcade.color.RED)
             self.draw_bp_bar(200, 395, self.bp, arcade.color.CYAN)
 
             arcade.draw_text("Gypsy Luka", 170, 430, arcade.color.WHITE, 14)
@@ -465,15 +501,15 @@ class Game(arcade.Window):
             if self.menu[self.selected] == "Item":
 
                 popup_x = 450
-                popup_y = 200
+                popup_y = 230
 
                 arcade.draw_rect_filled(
-                    arcade.rect.XYWH(popup_x, popup_y, 300, 160),
+                    arcade.rect.XYWH(popup_x, popup_y, 300, 230),
                     arcade.color.BLACK
                 )
 
                 for i, item in enumerate(self.menu_2):
-                    y = popup_y + 40 - i * 60
+                    y = popup_y + 100 - i * 60
 
                     texture = self.item_textures[item]
 
@@ -556,7 +592,7 @@ class Game(arcade.Window):
             # =========================
     # HP BAR
     # =========================
-    def draw_hp_bar(self, x, y, hp, color):
+    def draw_hp_bar(self, x, y, hp, max_hp, color):
         width = 160
         height = 12
 
@@ -565,10 +601,16 @@ class Game(arcade.Window):
             arcade.color.DARK_RED
         )
 
-        fill = max(0, (hp / self.max_hp) * width)
+        ratio = max(0, min(hp / max_hp, 1))
+        fill = width * ratio
 
         arcade.draw_rect_filled(
-            arcade.rect.XYWH(x - (width - fill) / 2, y, fill, height),
+            arcade.rect.XYWH(
+                x - width / 2 + fill / 2,
+                y,
+                fill,
+                height
+            ),
             color
         )
 
@@ -641,47 +683,67 @@ class Game(arcade.Window):
         return max_dist
 
     def on_update(self, delta_time):
-        if self.state != "explore":
-            return
 
-        if self.message_timer > 0:
-            self.message_timer -= delta_time
-            if self.message_timer <= 0:
-                self.message = ""
+        if self.state == "battle" and self.enemy_turn:
+            self.enemy_timer -= delta_time
 
-        depth = self.water_depth(self.player.center_x, self.player.center_y)
+            if self.enemy_timer <= 0:
+                self.enemy_luck = random.random()
+                if self.enemy_luck <= 0.2:
+                    self.player_hp -= 20
+                    self.message = "Crit damage -20HP"
+                elif 0.2 <= self.enemy_luck <= 0.6:
+                    self.player_hp -= 10
+                    self.message = "-10 damage"
+                elif 0.6 <= self.enemy_luck <= 0.8:
+                    self.enemy_defense = True
+                elif self.enemy_luck >= 0.8:
+                    self.enemy_hp += 20
+                    self.message = "Damn this bitch healed himself"
+                self.enemy_turn = False
+                self.player_turn = True
 
-        speed = PLAYER_SPEED
+        if self.state == "explore":
+            if self.message_timer > 0:
+                self.message_timer -= delta_time
+                if self.message_timer <= 0:
+                    self.message = ""
 
-        if self.is_water(self.player.center_x, self.player.center_y):
-            speed = PLAYER_SPEED * 0.5  # langsamer im Wasser
+            depth = self.water_depth(self.player.center_x, self.player.center_y)
 
-        dx = 0
-        dy = 0
+            speed = PLAYER_SPEED
 
-        if arcade.key.W in self.keys_held:
-            dy += speed
-        if arcade.key.S in self.keys_held:
-            dy -= speed
-        if arcade.key.A in self.keys_held:
-            dx -= speed
-        if arcade.key.D in self.keys_held:
-            dx += speed
+            if self.is_water(self.player.center_x, self.player.center_y):
+                speed = PLAYER_SPEED * 0.5  # langsamer im Wasser
 
-        new_x = self.player.center_x + dx
-        new_y = self.player.center_y + dy
-        depth_next = self.water_depth(new_x, new_y)
+            dx = 0
+            dy = 0
 
-        # 👉 zu tief → stoppen
-        if depth_next > 40:
-            return
+            if arcade.key.W in self.keys_held:
+                dy += speed
+            if arcade.key.S in self.keys_held:
+                dy -= speed
+            if arcade.key.A in self.keys_held:
+                dx -= speed
+            if arcade.key.D in self.keys_held:
+                dx += speed
 
-        # check X + Y zusammen (nicht getrennt!)
-        if not self.is_blocked(new_x, self.player.center_y):
-            self.player.center_x = new_x
+            new_x = self.player.center_x + dx
+            new_y = self.player.center_y + dy
+            depth_next = self.water_depth(new_x, new_y)
 
-        if not self.is_blocked(self.player.center_x, new_y):
-            self.player.center_y = new_y
+            # 👉 zu tief → stoppen
+            if depth_next > 40:
+                return
+
+            # check X + Y zusammen (nicht getrennt!)
+            if not self.is_blocked(new_x, self.player.center_y):
+                self.player.center_x = new_x
+
+            if not self.is_blocked(self.player.center_x, new_y):
+                self.player.center_y = new_y
+
+
 
 
 
@@ -767,31 +829,51 @@ class Game(arcade.Window):
                 else:
                     self.state = "battle"
                     self.start_battle_positions()
+
+                    if random.random() < 0.5:
+                        self.player_turn = True
+                        self.enemy_turn = False
+                        self.message = "You start!"
+                    else:
+                        self.player_turn = False
+                        self.enemy_turn = True
+                        self.enemy_timer = 0.5
+                        self.message = "Enemy starts!"
+
         if self.state == "battle":
 
             if key == arcade.key.LEFT:
                 self.selected = (self.selected - 1) % len(self.menu)
+                return
 
-            if key == arcade.key.RIGHT:
+            elif key == arcade.key.RIGHT:
                 self.selected = (self.selected + 1) % len(self.menu)
+                return
 
-
-
-            if key == arcade.key.SPACE :
+            elif key == arcade.key.SPACE and self.player_turn:
                 self.do_action()
-            if self.menu[self.selected] == "Item":
+                self.player_turn = False
+                self.enemy_turn = True
+                self.enemy_timer = 0.5
+                return
+
+            elif self.menu[self.selected] == "Item":
                 if key == arcade.key.UP:
                     self.selected_2 = (self.selected_2 - 1) % len(self.menu_2)
+                    return
 
                 if key == arcade.key.DOWN:
                     self.selected_2 = (self.selected_2 + 1) % len(self.menu_2)
+                    return
 
-            if self.menu[self.selected] == "Magic":
+            elif self.menu[self.selected] == "Magic":
                 if key == arcade.key.UP:
                     self.selected_3 = (self.selected_3 - 1) % len(self.menu_3)
+                    return
 
                 if key == arcade.key.DOWN:
                     self.selected_3 = (self.selected_3 + 1) % len(self.menu_3)
+                    return
 
     def on_key_release(self, key, modifiers):
         if key in self.keys_held:
