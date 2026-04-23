@@ -760,10 +760,10 @@ class Game(arcade.Window):
                 # Auswahlmarker
                 if self.selected_4 == i:
                     arcade.draw_text(
-                        "▶",
-                        x - 80,
-                        y - 10,
-                        arcade.color.RED,
+                        "▲",
+                        x -17 ,
+                        y - 80,
+                        arcade.color.WHITE,
                         30
                     )
 
