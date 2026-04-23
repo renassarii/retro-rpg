@@ -156,6 +156,13 @@ class Game(arcade.Window):
             "Health points": load_texture_from_url(url + "assets/images/level_up_symbols/heart.png"),
             "Mana": load_texture_from_url(url + "assets/images/level_up_symbols/ManaSymbol.png"),
         }
+        self.ENEMY ={
+            "Köpek Franz" :{ "xp" : 15,"hp": 100},
+            "Altunyarrak": {"xp" : 20,"hp": 100},
+        }
+
+        self.current_enemy ="Köpek Franz"
+
 
 
 
@@ -386,7 +393,11 @@ class Game(arcade.Window):
 
         if self.enemy_hp <= 0:
             self.after_battle = True
-            self.player_xp += 50
+
+            xp_gain = self.ENEMY[self.current_enemy]["xp"]
+            self.player_xp += xp_gain
+
+            self.message = f"+{xp_gain} XP"
             if self.player_xp >= self.player_max_xp:
                 # sofort Level-Up: Wechsel zur Level-Choice
                 self.player_xp -= self.player_max_xp
@@ -1087,6 +1098,12 @@ class Game(arcade.Window):
                 else:
                     self.state = "battle"
                     self.start_battle_positions()
+                    # Gegner setzen
+                    self.current_enemy = "Köpek Franz"  # später random möglich
+
+                    enemy_data = self.ENEMY[self.current_enemy]
+                    self.enemy_hp = enemy_data["hp"]
+                    self.enemy_max_hp = enemy_data["hp"]
 
                     if random.random() < 0.5:
                         self.player_turn = True
