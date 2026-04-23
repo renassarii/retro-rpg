@@ -377,13 +377,6 @@ class Game(arcade.Window):
             else:
                 self.message = "No potions left"
 
-        elif action == "Shield":
-            if self.player_debuff_spell:
-                self.message = "You are shielded already"
-            else:
-                self.player_debuff_spell = True
-                self.message = "You shield yourself for the next turn"
-                action_done = True
 
         elif action == "Escape":
             if random.random() > 0.5:
@@ -531,21 +524,17 @@ class Game(arcade.Window):
                 arcade.rect.XYWH(400, 80, 4000, 140),
                 arcade.color.BLACK
             )
+
             x = 200
-            for i, magic in enumerate(self.menu):
-                color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
-                arcade.draw_text(magic, x + i * 150, 70, color, 18)
+            msg_color = arcade.color.WHITE
 
-            action = self.menu[self.selected]
-
-            color_map = {
-                "Magic": arcade.color.VIOLET,
-                "Item": arcade.color.GREEN,
-                "Punch": arcade.color.WHITE,
-                "Escape": arcade.color.RED
-            }
-
-            msg_color = color_map.get(action, arcade.color.WHITE)
+            arcade.draw_text(
+                self.message,
+                250,
+                20,
+                msg_color,
+                14
+            )
 
             if self.menu[self.selected] == "Magic":
 
@@ -625,7 +614,19 @@ class Game(arcade.Window):
             arcade.draw_text(f"Level: {self.level}", 20, 430, arcade.color.WHITE, 14)
 
             for i, item in enumerate(self.menu):
-                color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
+                # Einheitliche Farb-Logik: bei Auswahl je nach Item unterschiedliche Farben
+                if i == self.selected:
+                    if item == "Magic":
+                        color = (160, 80, 255)  # violet
+                    elif item == "Escape":
+                        color = (255, 16, 240)  # neon pink
+                    elif item == "Punch":
+                        color = (150, 0, 24)  # carmin red
+                    else:
+                        color = (255, 255, 0)  # yellow (z.B. Item)
+                else:
+                    color = arcade.color.WHITE
+
                 arcade.draw_text(item, x + i * 150, 70, color, 18)
 
             arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
@@ -692,7 +693,7 @@ class Game(arcade.Window):
                         )
 
                 # =========================
-                # SCROLL ARROWS (IDENTISCH MAGIC)
+                # SCROLL ARROWS
                 # =========================
 
                 if self.item_scroll > 0:
@@ -703,11 +704,10 @@ class Game(arcade.Window):
 
                 arcade.draw_text(f"Level: {self.level}", 20, 430, arcade.color.WHITE, 14)
 
-                for i, item in enumerate(self.menu):
-                    color = arcade.color.YELLOW if i == self.selected else arcade.color.WHITE
-                    arcade.draw_text(item, x + i * 150, 70, color, 18)
 
-                arcade.draw_text(self.message, 250, 20, arcade.color.WHITE, 14)
+
+
+
 
         if self.state == "level_choice":
             arcade.draw_texture_rect(
