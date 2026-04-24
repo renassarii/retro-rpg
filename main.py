@@ -129,7 +129,8 @@ class Game(arcade.Window):
         self.background1 = load_texture_from_url(url + "assets/images/backgrounds/hintergrund.png")
         self.gameover = load_texture_from_url(url + "assets/images/backgrounds/gameover.png")
         self.level_ui_bg = load_texture_from_url(url + "assets/images/backgrounds/hintergrund.png")
-
+        self.enemy = None
+        self.current_enemy = None
 
 
 
@@ -165,7 +166,7 @@ class Game(arcade.Window):
                 url + "assets/images/characters/Franz.png"
             ),
             "Altunyarrak": load_texture_from_url(
-                url + "assets/images/characters/Franz.png"
+                url + "assets/images/characters/emre.png"
             ),
         }
 
