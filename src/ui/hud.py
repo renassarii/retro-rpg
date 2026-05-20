@@ -24,6 +24,15 @@ def draw_hp_bar(x, y, hp, max_hp, color):
         ),
         color,
     )
+    arcade.draw_text(
+        f"{hp} / {max_hp}",
+        x,
+        y,
+        arcade.color.WHITE,
+        10,
+        anchor_x="center",
+        anchor_y="center",
+    )
 
 
 def draw_bp_bar(x, y, bp, max_bp, color):
