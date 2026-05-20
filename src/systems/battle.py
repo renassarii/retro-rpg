@@ -1,5 +1,6 @@
 """Battle logic: player actions, enemy turn, post-action state transitions."""
 
+import arcade
 import random
 
 from src.data.enemies import ENEMIES
@@ -15,6 +16,17 @@ HEALTH_POTION_HEAL = 20
 MANA_POTION_RESTORE = 20
 
 LEVEL_XP_INCREMENT = 50
+
+def spawn_damage(game, target, damage, is_crit=False):
+    color = arcade.color.GRAY if is_crit else arcade.color.YELLOW
+
+    game.damage_numbers.append({
+        "text": f"-{damage}",
+        "x": target.center_x + 30,
+        "y": target.center_y + 40,
+        "timer": 1.0,
+        "color": color
+    })
 
 
 def perform_player_action(game):
@@ -39,24 +51,31 @@ def perform_player_action(game):
 
 def _resolve_punch(game):
     damage = PUNCH_BASE_DAMAGE
+
     if game.player_buff_spell:
         if game.enemy_defense:
             shield_damage = int((damage * random.random()) * 2)
             game.enemy_hp -= shield_damage
+            spawn_damage(game, game.enemy, shield_damage)
             game.message = f"he shielded himself {shield_damage} damage"
             game.enemy_defense = False
         else:
             game.enemy_hp -= damage * 2
+            spawn_damage(game, game.enemy, damage * 2, is_crit=True)
             game.message = "you did -28 damage"
+
         game.player_buff_spell = False
+
     else:
         if game.enemy_defense:
             shield_damage = int(damage * random.random())
             game.enemy_hp -= shield_damage
+            spawn_damage(game, game.enemy, shield_damage)
             game.message = f"he shielded himself {shield_damage} damage"
             game.enemy_defense = False
         else:
             game.enemy_hp -= damage
+            spawn_damage(game, game.enemy, damage)
             game.message = "you did -14 damage"
 
 
@@ -91,20 +110,26 @@ def _apply_offensive_magic(game, damage, message, buff_doubles=True):
         if game.enemy_defense:
             shield_damage = int((damage * random.random()) * 2)
             game.enemy_hp -= shield_damage
+            spawn_damage(game, game.enemy, shield_damage)
             game.message = f"he shielded himself {shield_damage} damage"
             game.enemy_defense = False
         else:
             game.enemy_hp -= damage * 2
+            spawn_damage(game, game.enemy, damage * 2, is_crit=True)
             game.message = message
+
         game.player_buff_spell = False
+
     else:
         if game.enemy_defense:
             shield_damage = int(damage * random.random())
             game.enemy_hp -= shield_damage
+            spawn_damage(game, game.enemy, shield_damage)
             game.message = f"he shielded himself {shield_damage} damage"
             game.enemy_defense = False
         else:
             game.enemy_hp -= damage
+            spawn_damage(game, game.enemy, damage)
             game.message = message
 
 
@@ -179,13 +204,18 @@ def _enemy_debuffed_turn(game):
     if luck <= 0.1:
         damage = int(20 * random.random())
         game.player_hp -= damage
+        spawn_damage(game, game.player, damage)
         game.message = f"Crit damage {damage}"
+
     elif luck <= 0.6:
         damage = int(10 * random.random())
         game.player_hp -= damage
+        spawn_damage(game, game.player, damage)
         game.message = f"{damage}"
+
     elif luck <= 0.9:
         game.enemy_defense = True
+
     else:
         game.enemy_hp += 5
         game.message = "Damn this bitch healed himself"
@@ -197,12 +227,17 @@ def _enemy_normal_turn(game):
 
     if luck <= 0.2:
         game.player_hp -= 20
+        spawn_damage(game, game.player, 20)
         game.message = "Crit damage -20HP"
+
     elif luck <= 0.6:
         game.player_hp -= 10
+        spawn_damage(game, game.player, 10)
         game.message = "-10 damage"
+
     elif luck <= 0.8:
         game.enemy_defense = True
+
     else:
         heal = 5
         game.enemy_hp += heal

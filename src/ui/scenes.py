@@ -126,6 +126,16 @@ def draw_battle(game):
     draw_hp_bar(600, 410, game.enemy_hp, game.enemy_max_hp, arcade.color.RED)
     draw_bp_bar(200, 395, game.bp, game.max_bp, arcade.color.CYAN)
 
+    for dmg in game.damage_numbers:
+        arcade.draw_text(
+            dmg["text"],
+            dmg["x"],
+            dmg["y"],
+            dmg["color"],
+            16,
+            anchor_x="center",
+        )
+
     arcade.draw_text("Gypsy Luka", 170, 430, arcade.color.WHITE, 14)
     enemy_name = game.current_enemy or ""
     arcade.draw_text(enemy_name, 540, 430, arcade.color.WHITE, 14)

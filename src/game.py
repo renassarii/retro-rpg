@@ -56,6 +56,7 @@ class Game(arcade.Window):
         self.message = ""
         self.message_timer = 0
         self.post_battle_xp = None
+        self.damage_numbers = []
 
     def _load_textures(self):
         self.background1 = load_texture_from_url(
@@ -174,6 +175,14 @@ class Game(arcade.Window):
 
         if self.state == "explore":
             self._update_explore(delta_time)
+
+        for dmg in self.damage_numbers:
+            dmg["y"] += 40 * delta_time
+            dmg["timer"] -= delta_time
+
+        self.damage_numbers = [
+            d for d in self.damage_numbers if d["timer"] > 0
+        ]
 
     def _update_explore(self, delta_time):
         if self.message_timer > 0:

@@ -3,6 +3,8 @@
 import arcade
 
 
+
+
 def draw_hp_bar(x, y, hp, max_hp, color):
     width = 160
     height = 12
